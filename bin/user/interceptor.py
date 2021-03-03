@@ -274,6 +274,7 @@ import string
 import sys
 import threading
 import time
+import serial
 
 try:
     # weewx4 logging
@@ -2296,6 +2297,7 @@ class EcowittClient(Consumer):
     def __init__(self, **stn_dict):
         super(EcowittClient, self).__init__(
             EcowittClient.Parser(), handler=EcowittClient.Handler, **stn_dict)
+        self.serRec = serial.Serial(port, baudrate = 115200, bytesize=serial.EIGHTBITS, stopbits = serial.STOPBITS_ONE, timeout = 1)
 
     class Handler(Consumer.Handler):
 
@@ -2418,6 +2420,9 @@ class EcowittClient(Consumer):
                     newtot = pkt['rain_total']
                     pkt['rain'] = self._delta_rain(newtot, self._last_rain)
                     self._last_rain = newtot
+                #Publish all
+                dato = [pkt['temperature_in'],pkt['temperature_out'],pkt['humidity_in'],pkt['humidity_out'],pkt['pressure'],pkt['wind_dir'],pkt['wind_speed'],pkt['wind_gust'],pkt['rain_rate'],pkt['rain'],pkt['solar_radiation']]
+                self.serRec.write(dato)
 
             except ValueError as e:
                 logerr("parse failed for %s: %s" % (s, e))
